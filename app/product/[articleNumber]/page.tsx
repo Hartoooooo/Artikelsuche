@@ -44,7 +44,7 @@ export default async function ProductPage({
           href="/"
           className="text-sm text-gray-600 hover:text-gray-800 underline mb-6 inline-block"
         >
-          Zurück zur Suche
+          Zurück zur Übersicht
         </Link>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
