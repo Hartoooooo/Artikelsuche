@@ -21,11 +21,13 @@ export async function GET(request: NextRequest) {
     }
 
     const trimmedArticleNumber = articleNumber.trim()
+    // Artikelnummern sind in der Datenbank immer großgeschrieben, daher direkt umwandeln
+    const upperCaseArticleNumber = trimmedArticleNumber.toUpperCase()
 
     const { data, error } = await supabase
       .from('products')
       .select('*')
-      .eq('Artikelnummer', trimmedArticleNumber)
+      .eq('Artikelnummer', upperCaseArticleNumber)
       .limit(1)
       .single()
 

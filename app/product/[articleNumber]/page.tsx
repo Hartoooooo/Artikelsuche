@@ -5,10 +5,13 @@ import Link from 'next/link'
 
 async function getProduct(articleNumber: string): Promise<Product | null> {
   try {
+    // Artikelnummern sind in der Datenbank immer großgeschrieben, daher direkt umwandeln
+    const upperCaseArticleNumber = articleNumber.toUpperCase()
+    
     const { data, error } = await supabase
       .from('products')
       .select('*')
-      .eq('Artikelnummer', articleNumber)
+      .eq('Artikelnummer', upperCaseArticleNumber)
       .limit(1)
       .single()
 
