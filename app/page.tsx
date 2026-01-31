@@ -119,7 +119,7 @@ function DatabaseContent() {
                 Suchen
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="hidden md:flex flex-wrap gap-2">
               {CATEGORIES.map((category) => (
                 <button
                   key={category}
@@ -155,39 +155,43 @@ function DatabaseContent() {
                 <table className="w-full border-collapse border border-gray-300 bg-white">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
-                        Artikelnummer
+                      <th className="border border-gray-300 px-4 py-3 text-left text-xs md:text-sm text-gray-700">
+                        <span className="hidden md:inline">Artikelnummer</span>
+                        <span className="md:hidden">Nummer</span>
                       </th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
+                      <th className="border border-gray-300 px-4 py-3 text-left text-xs md:text-sm text-gray-700">
                         Beschreibung
                       </th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
-                        Einkaufspreise 2026 mit A Kundenrabatt
+                      <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
+                        <span className="hidden md:inline">Einkaufspreise 2026 mit A Kundenrabatt</span>
+                        <span className="md:hidden">EK A Rabatt</span>
                       </th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
-                        Einkaufspreise 2026 € ohne Mwst.
+                      <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
+                        <span className="hidden md:inline">Einkaufspreise 2026 € ohne Mwst.</span>
+                        <span className="md:hidden">EK o. Mwst.</span>
                       </th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
-                        Empf. VK-Preise 2026 € ohne Mwst.
+                      <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
+                        <span className="hidden md:inline">Empf. VK-Preise 2026 € ohne Mwst.</span>
+                        <span className="md:hidden">VK o. Mwst.</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/product/${encodeURIComponent(product.Artikelnummer)}`)}>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="border border-gray-300 px-4 py-3 text-xs md:text-sm text-gray-800">
                           {product.Artikelnummer}
                         </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="border border-gray-300 px-4 py-3 text-xs md:text-sm text-gray-800">
                           {product.Beschreibung || '-'}
                         </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Einkaufspreise 2026 mit A Kundenrabatt'] || '-'}
                         </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Einkaufspreise 2026 € ohne Mwst.'] || '-'}
                         </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Empf. VK-Preise 2026 € ohne Mwst.'] || '-'}
                         </td>
                       </tr>
