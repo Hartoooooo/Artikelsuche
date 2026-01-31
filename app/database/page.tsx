@@ -122,10 +122,10 @@ function DatabaseContent() {
                         Beschreibung
                       </th>
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
-                        Einkaufspreise 2026 € ohne Mwst.
+                        Einkaufspreise 2026 mit A Kundenrabatt
                       </th>
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
-                        Einkaufspreise 2026 mit A Kundenrabatt
+                        Einkaufspreise 2026 € ohne Mwst.
                       </th>
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm text-gray-700">
                         Empf. VK-Preise 2026 € ohne Mwst.
@@ -142,10 +142,10 @@ function DatabaseContent() {
                           {product.Beschreibung || '-'}
                         </td>
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          {product['Einkaufspreise 2026 € ohne Mwst.'] || '-'}
+                          {product['Einkaufspreise 2026 mit A Kundenrabatt'] || '-'}
                         </td>
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          {product['Einkaufspreise 2026 mit A Kundenrabatt'] || '-'}
+                          {product['Einkaufspreise 2026 € ohne Mwst.'] || '-'}
                         </td>
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
                           {product['Empf. VK-Preise 2026 € ohne Mwst.'] || '-'}
