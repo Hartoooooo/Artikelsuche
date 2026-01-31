@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent, useEffect, useRef } from 'react'
+import { useState, FormEvent, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -9,7 +9,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isPasteRef = useRef(false)
 
   const performSearch = async (trimmed: string) => {
     if (!trimmed) {
@@ -50,25 +50,28 @@ export default function Home() {
     await performSearch(trimmed)
   }
 
-  useEffect(() => {
-    const trimmed = articleNumber.trim()
-    
-    if (trimmed.length > 0) {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-      
-      searchTimeoutRef.current = setTimeout(() => {
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    isPasteRef.current = true
+    // Kurze Verzögerung, damit der Wert im Input gesetzt ist
+    setTimeout(() => {
+      const pastedValue = e.clipboardData.getData('text')
+      const trimmed = pastedValue.trim()
+      if (trimmed.length > 0) {
+        setArticleNumber(trimmed)
         performSearch(trimmed)
-      }, 500)
-    }
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
       }
+      isPasteRef.current = false
+    }, 50)
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setArticleNumber(newValue)
+    // Wenn es ein Paste-Event war, wurde die Suche bereits gestartet
+    if (!isPasteRef.current) {
+      setError(null)
     }
-  }, [articleNumber])
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -85,7 +88,8 @@ export default function Home() {
               id="articleNumber"
               type="text"
               value={articleNumber}
-              onChange={(e) => setArticleNumber(e.target.value)}
+              onChange={handleChange}
+              onPaste={handlePaste}
               placeholder="Artikelnummer eingeben"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent text-lg"
               disabled={isLoading}
