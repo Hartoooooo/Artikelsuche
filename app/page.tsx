@@ -167,12 +167,8 @@ function DatabaseContent() {
                         <span className="md:hidden">EK A Rabatt</span>
                       </th>
                       <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
-                        <span className="hidden md:inline">Einkaufspreise 2026 €</span>
-                        <span className="md:hidden">EK Preis</span>
-                      </th>
-                      <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
                         <span className="hidden md:inline">Empf. VK-Preise 2026 €</span>
-                        <span className="md:hidden">VK Preis</span>
+                        <span className="md:hidden">VK</span>
                       </th>
                     </tr>
                   </thead>
@@ -187,9 +183,6 @@ function DatabaseContent() {
                         </td>
                         <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Einkaufspreise 2026 mit A Kundenrabatt'] || '-'}
-                        </td>
-                        <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
-                          {product['Einkaufspreise 2026 € ohne Mwst.'] || '-'}
                         </td>
                         <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Empf. VK-Preise 2026 € ohne Mwst.'] || '-'}
