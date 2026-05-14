@@ -1,5 +1,4 @@
 export interface Product {
-  id: string
   Artikelnummer: string
   Beschreibung: string | null
   'Einkaufspreise 2026 € ohne Mwst.': string | null

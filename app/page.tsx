@@ -7,6 +7,14 @@ import { Product, ProductsResponse } from '@/types/product'
 
 const CATEGORIES = ['Scaler', 'Kürette', 'Schere', 'Nadelhalter', 'Raspatorium', 'Zahnzange', 'IMS']
 
+function calcDiscount(price: string | null, factor: number): string {
+  if (!price) return '-'
+  const cleaned = price.replace('€', '').replace(',', '.').trim()
+  const parsed = parseFloat(cleaned)
+  if (isNaN(parsed)) return '-'
+  return '€ ' + (parsed * factor).toFixed(2).replace('.', ',')
+}
+
 function DatabaseContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -167,6 +175,10 @@ function DatabaseContent() {
                         <span className="md:hidden">EK</span>
                       </th>
                       <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
+                        <span className="hidden md:inline">EK -16%</span>
+                        <span className="md:hidden">EK -16%</span>
+                      </th>
+                      <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
                         <span className="hidden md:inline">Empf. VK-Preise 2026 €</span>
                         <span className="md:hidden">VK</span>
                       </th>
@@ -174,7 +186,7 @@ function DatabaseContent() {
                   </thead>
                   <tbody>
                     {products.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/product/${encodeURIComponent(product.Artikelnummer)}`)}>
+                      <tr key={product.Artikelnummer} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/product/${encodeURIComponent(product.Artikelnummer)}`)}>
                         <td className="border border-gray-300 px-4 py-3 text-xs md:text-sm text-gray-800">
                           {product.Artikelnummer}
                         </td>
@@ -183,6 +195,9 @@ function DatabaseContent() {
                         </td>
                         <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Einkaufspreise 2026 € ohne Mwst.'] || '-'}
+                        </td>
+                        <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
+                          {calcDiscount(product['Einkaufspreise 2026 € ohne Mwst.'], 0.84)}
                         </td>
                         <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Empf. VK-Preise 2026 € ohne Mwst.'] || '-'}

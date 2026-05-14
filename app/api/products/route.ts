@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       query = query.or(`Artikelnummer.ilike.%${q}%,Beschreibung.ilike.%${q}%`)
     }
 
-    query = query.order('id', { ascending: false })
+    query = query.order('Artikelnummer', { ascending: true })
       .range(from, to)
 
     const { data, error, count } = await query
