@@ -3,7 +3,6 @@ export interface Product {
   Artikelnummer: string
   Beschreibung: string | null
   'Einkaufspreise 2026 € ohne Mwst.': string | null
-  'Einkaufspreise 2026 mit A Kundenrabatt': string | null
   'Empf. VK-Preise 2026 € ohne Mwst.': string | null
 }
 

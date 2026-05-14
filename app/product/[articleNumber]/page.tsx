@@ -73,13 +73,6 @@ export default async function ProductPage({
               </div>
             )}
 
-            {product['Einkaufspreise 2026 mit A Kundenrabatt'] && (
-              <div>
-                <h3 className="text-sm text-gray-600 mb-1">Einkaufspreis 2026 mit "A" Kundenrabatt</h3>
-                <p className="text-lg text-gray-800">{product['Einkaufspreise 2026 mit A Kundenrabatt']} €</p>
-              </div>
-            )}
-
             {product['Empf. VK-Preise 2026 € ohne Mwst.'] && (
               <div>
                 <h3 className="text-sm text-gray-600 mb-1">Empfohlener VK-Preis 2026 (ohne MwSt.)</h3>
