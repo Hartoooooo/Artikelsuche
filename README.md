@@ -37,17 +37,14 @@ Erstelle eine Tabelle `products` mit folgendem Schema:
 
 ```sql
 CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  article_number TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  description TEXT,
-  price NUMERIC,
-  currency TEXT,
-  image_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  "Artikelnummer" TEXT PRIMARY KEY,
+  "Beschreibung" TEXT,
+  "Einkaufspreise 2026 € ohne Mwst." TEXT,
+  "Empf. VK-Preise 2026 € ohne Mwst." TEXT
 );
 
-CREATE INDEX idx_products_article_number ON products(article_number);
+-- Lesezugriff für den anon-Key (ohne RLS: Grant genügt)
+GRANT SELECT ON products TO anon, authenticated;
 ```
 
 ### 4. Entwicklungsserver starten
