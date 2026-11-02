@@ -2,9 +2,8 @@
 """
 AERA-Preisscraper für das Micro-Dental-Sortiment.
 
-1. Holt alle Artikelnummern (Hersteller-Artikelnummern) von micro-dental.de
-   (Sitemap -> Produktseiten -> "SKU ..." in der Meta-Description).
-   Zusätzliche Nummern können in data/aera-extra-skus.txt stehen (eine pro Zeile).
+1. Liest die Artikelnummern aus der festen Liste data/aera-skus.txt.
+   (Neu erzeugen aus dem Shop micro-dental.de: --refresh-skus)
 2. Sucht jede Nummer auf aera-online.de (öffentliche Seiten, ohne Login) und liest
    Bestpreis, Preisspanne und Anzahl der Angebote aus.
 3. Schreibt data/aera-prices.json (aktueller Stand) und hängt an
@@ -33,7 +32,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
 PRICES_FILE = os.path.join(DATA_DIR, "aera-prices.json")
 HISTORY_FILE = os.path.join(DATA_DIR, "aera-history.csv")
-EXTRA_SKUS_FILE = os.path.join(DATA_DIR, "aera-extra-skus.txt")
+SKUS_FILE = os.path.join(DATA_DIR, "aera-skus.txt")
 DEBUG_DIR = os.path.join(ROOT, "aera-debug")
 
 MICRO_SITEMAP = "https://micro-dental.de/sitemap.xml"
@@ -152,16 +151,32 @@ def find_sku(html: str, soup: BeautifulSoup, desc: str) -> tuple[str | None, str
     return None, None
 
 
-def extra_skus() -> list[dict]:
-    if not os.path.exists(EXTRA_SKUS_FILE):
+def load_skus() -> list[dict]:
+    if not os.path.exists(SKUS_FILE):
         return []
     out = []
-    with open(EXTRA_SKUS_FILE, encoding="utf-8") as f:
+    with open(SKUS_FILE, encoding="utf-8") as f:
         for line in f:
-            line = line.split("#", 1)[0].strip()
-            if line:
-                out.append({"sku": line, "name": "", "url": None})
+            line = line.rstrip("\n")
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            sku, _, name = line.partition("\t")
+            if sku.strip():
+                out.append({"sku": sku.strip(), "name": name.strip(), "url": None})
     return out
+
+
+def write_skus(products: list[dict]) -> None:
+    header = [
+        "# Artikelnummern für den AERA-Preischeck (eine pro Zeile, optional mit Name nach einem Tab).",
+        "# Neue Micro-Dental-Produkte hier ergänzen, entfernte löschen.",
+        "# Komplett neu aus dem Shop erzeugen: python scripts/aera_scraper.py --refresh-skus",
+        "",
+    ]
+    rows = sorted({norm(p["sku"]): p for p in products}.values(), key=lambda p: p["sku"])
+    with open(SKUS_FILE, "w", encoding="utf-8") as f:
+        f.write("\n".join(header + [f"{p['sku']}\t{p.get('name') or ''}" for p in rows]) + "\n")
+    log(f"{len(rows)} Artikelnummern nach {SKUS_FILE} geschrieben.")
 
 
 # --------------------------------------------------------------------------- #
@@ -364,16 +379,26 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0, help="nur die ersten N Artikel (Test)")
     ap.add_argument("--sku", action="append", default=[], help="nur diese Nummer(n) prüfen")
     ap.add_argument("--debug", action="store_true", help="HTML von Fehlschlägen speichern")
+    ap.add_argument("--refresh-skus", action="store_true",
+                    help="Artikelnummern neu aus micro-dental.de lesen, data/aera-skus.txt schreiben und beenden")
     args = ap.parse_args()
 
     os.makedirs(DATA_DIR, exist_ok=True)
     session = requests.Session()
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
+    if args.refresh_skus:
+        found = micro_dental_products(session)
+        if not found:
+            log("Keine Artikelnummern im Shop gefunden – Liste bleibt unverändert.")
+            return 1
+        write_skus(found)
+        return 0
+
     if args.sku:
         products = [{"sku": s, "name": "", "url": None} for s in args.sku]
     else:
-        products = micro_dental_products(session) + extra_skus()
+        products = load_skus()
     seen, unique = set(), []
     for p in products:
         if norm(p["sku"]) and norm(p["sku"]) not in seen:
@@ -402,7 +427,6 @@ def main() -> int:
             "sku": sku,
             "name": p.get("name") or res.get("aera_name") or "",
             "micro_url": p.get("url"),
-            "sku_source": p.get("sku_source"),
             "status": status,
             "checked_at": now,
             "aera_name": res.get("aera_name"),
@@ -452,7 +476,6 @@ def main() -> int:
         "updated_at": now,
         "source": "aera-online.de (öffentliche Preise, ohne Login)",
         "counts": counts,
-        "micro_pages_without_sku": MISSING_PAGES,
         "items": sorted(items, key=lambda x: norm(x["sku"])),
     }
     with open(PRICES_FILE, "w", encoding="utf-8") as f:
