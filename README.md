@@ -135,3 +135,10 @@ Ruft eine Liste von Produkten mit optionaler Suche und Pagination ab.
   "pageSize": 20
 }
 ```
+
+## AERA-Preischeck
+
+- **Seite `/aera`**: Günstigster öffentlich sichtbarer AERA-Online-Preis (netto) für jede Artikelnummer aus dem micro-dental.de-Shop, mit Preisspanne, Anzahl Angebote und Zeitpunkt der letzten Aktualisierung. Auf der Produktdetailseite erscheint derselbe Preis als eigener Abschnitt.
+- **Daten**: `data/aera-prices.json` (aktueller Stand), `data/aera-history.csv` (Preisverlauf, eine Zeile pro Artikel und Tag).
+- **Aktualisierung**: GitHub Action `.github/workflows/aera-prices.yml`, täglich 05:17 UTC. Manuell starten unter *Actions → AERA-Preise aktualisieren → Run workflow* (optional mit einer einzelnen Artikelnummer als Testlauf, dabei wird nichts gespeichert).
+- **Scraper**: `scripts/aera_scraper.py` liest die Artikelnummern aus der Sitemap von micro-dental.de und sucht sie auf aera-online.de. Weitere Nummern können in `data/aera-extra-skus.txt` ergänzt werden.

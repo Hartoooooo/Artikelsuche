@@ -10,9 +10,6 @@ on:
         description: "Optional: nur diese Artikelnummer testen (es wird nichts gespeichert)"
         required: false
         default: ""
-  push:
-    branches: [aera-preise]
-    paths: ["scripts/aera_scraper.py", ".github/workflows/aera-prices.yml"]
 
 permissions:
   contents: write
