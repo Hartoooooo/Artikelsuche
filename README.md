@@ -5,7 +5,7 @@ Eine Produktsuche-Anwendung mit Next.js 14+ (App Router), TypeScript, TailwindCS
 ## Features
 
 - **Landing-Seite (`/`)**: Zentrierte Suchleiste für Artikelnummer-Suche
-- **Datenbankübersicht (`/database`)**: Durchsuchbare Tabelle aller Produkte mit Pagination
+- **Datenbankübersicht (`/database`)**: Durchsuchbare Tabelle aller Produkte mit Pagination, inkl. günstigstem AERA-Preis
 - **Produktdetailseite (`/product/[articleNumber]`)**: Detaillierte Ansicht eines einzelnen Produkts
 
 ## Setup
@@ -40,7 +40,10 @@ CREATE TABLE products (
   "Artikelnummer" TEXT PRIMARY KEY,
   "Beschreibung" TEXT,
   "Einkaufspreise 2026 € ohne Mwst." TEXT,
-  "Empf. VK-Preise 2026 € ohne Mwst." TEXT
+  "Empf. VK-Preise 2026 € ohne Mwst." TEXT,
+  "AERA Preis € ohne Mwst." NUMERIC(10,2),  -- vom AERA-Scraper befüllt
+  "AERA Link" TEXT,
+  "AERA Stand" TIMESTAMPTZ
 );
 
 -- Lesezugriff für den anon-Key (ohne RLS: Grant genügt)
@@ -138,7 +141,7 @@ Ruft eine Liste von Produkten mit optionaler Suche und Pagination ab.
 
 ## AERA-Preischeck
 
-- **Seite `/aera`**: Günstigster öffentlich sichtbarer AERA-Online-Preis (netto) für jede Artikelnummer aus dem micro-dental.de-Shop, mit Preisspanne, Anzahl Angebote und Zeitpunkt der letzten Aktualisierung. Auf der Produktdetailseite erscheint derselbe Preis als eigener Abschnitt.
-- **Daten**: `data/aera-prices.json` (aktueller Stand), `data/aera-history.csv` (Preisverlauf, eine Zeile pro Artikel und Tag).
-- **Aktualisierung**: GitHub Action `.github/workflows/aera-prices.yml`, täglich 05:17 UTC. Manuell starten unter *Actions → AERA-Preise aktualisieren → Run workflow* (optional mit einer einzelnen Artikelnummer als Testlauf, dabei wird nichts gespeichert).
-- **Scraper**: `scripts/aera_scraper.py` liest die Artikelnummern aus der Sitemap von micro-dental.de und sucht sie auf aera-online.de. Weitere Nummern können in `data/aera-extra-skus.txt` ergänzt werden.
+- **Spalte „AERA ab €“** in der Übersicht und auf der Produktseite: günstigster öffentlich sichtbarer Preis auf AERA-Online (netto), verlinkt auf das AERA-Produkt. Gespeichert in der Tabelle `products` in den Spalten `AERA Preis € ohne Mwst.`, `AERA Link` und `AERA Stand`.
+- **Aktualisierung**: GitHub Action `.github/workflows/aera-prices.yml`, täglich 05:17 UTC. Manuell unter *Actions → AERA-Preise aktualisieren → Run workflow* (optional mit einer einzelnen Artikelnummer als Testlauf, dabei wird nichts gespeichert).
+- **Benötigte GitHub-Secrets**: `SUPABASE_URL` und `SUPABASE_SERVICE_KEY` (Supabase → Project Settings → API).
+- **Scraper**: `scripts/aera_scraper.py` liest alle Artikelnummern aus der Sitemap von micro-dental.de, sucht sie auf aera-online.de und schreibt die Preise in Supabase. Zusätzlich landet der Stand in `data/aera-prices.json` und der Verlauf in `data/aera-history.csv`. Weitere Nummern können in `data/aera-extra-skus.txt` ergänzt werden.

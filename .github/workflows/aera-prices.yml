@@ -39,6 +39,9 @@ jobs:
       - name: Preise abfragen
         if: github.event_name != 'workflow_dispatch' || inputs.sku == ''
         run: python scripts/aera_scraper.py --debug
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
 
       - name: Debug-HTML hochladen
         if: always()

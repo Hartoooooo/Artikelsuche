@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Product, ProductsResponse } from '@/types/product'
+import { formatEuro, formatDateTime } from '@/lib/format'
 
 const CATEGORIES = ['Scaler', 'Kürette', 'Schere', 'Nadelhalter', 'Raspatorium', 'Zahnzange', 'IMS']
 
@@ -103,17 +104,16 @@ function DatabaseContent() {
   }
 
   const totalPages = Math.ceil(total / pageSize)
+  const aeraStand = products.reduce<string | null>(
+    (latest, p) => (p['AERA Stand'] && (!latest || p['AERA Stand'] > latest) ? p['AERA Stand'] : latest),
+    null
+  )
 
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <div className="flex items-baseline justify-between gap-4 mb-6">
-            <h1 className="text-2xl text-gray-800">Datenbankübersicht</h1>
-            <Link href="/aera" className="text-sm text-gray-600 hover:text-gray-800 underline whitespace-nowrap">
-              AERA-Preise
-            </Link>
-          </div>
+          <h1 className="text-2xl text-gray-800 mb-6">Datenbankübersicht</h1>
 
           <form onSubmit={handleSearch} className="mb-6">
             <div className="flex gap-2 mb-4">
@@ -160,8 +160,9 @@ function DatabaseContent() {
             </p>
           ) : (
             <>
-              <div className="mb-4 text-sm text-gray-600">
-                {total} Produkt{total !== 1 ? 'e' : ''} gefunden
+              <div className="mb-4 text-sm text-gray-600 flex flex-wrap justify-between gap-2">
+                <span>{total} Produkt{total !== 1 ? 'e' : ''} gefunden</span>
+                {aeraStand && <span>AERA-Preise Stand: {formatDateTime(aeraStand)}</span>}
               </div>
 
               <div className="overflow-x-auto">
@@ -187,6 +188,10 @@ function DatabaseContent() {
                         <span className="hidden md:inline">Empf. VK-Preise 2026 €</span>
                         <span className="md:hidden">VK</span>
                       </th>
+                      <th className="border border-gray-300 px-2 md:px-4 py-3 text-left text-xs md:text-sm text-gray-700 whitespace-nowrap min-w-[80px]">
+                        <span className="hidden md:inline">AERA ab €</span>
+                        <span className="md:hidden">AERA</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -206,6 +211,25 @@ function DatabaseContent() {
                         </td>
                         <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
                           {product['Empf. VK-Preise 2026 € ohne Mwst.'] || '-'}
+                        </td>
+                        <td className="border border-gray-300 px-2 md:px-4 py-3 text-xs md:text-sm text-gray-800 whitespace-nowrap min-w-[80px]">
+                          {product['AERA Preis € ohne Mwst.'] !== null && product['AERA Preis € ohne Mwst.'] !== undefined ? (
+                            product['AERA Link'] ? (
+                              <a
+                                href={product['AERA Link']}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {formatEuro(product['AERA Preis € ohne Mwst.'])}
+                              </a>
+                            ) : (
+                              formatEuro(product['AERA Preis € ohne Mwst.'])
+                            )
+                          ) : (
+                            '-'
+                          )}
                         </td>
                       </tr>
                     ))}

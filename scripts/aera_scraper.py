@@ -310,6 +310,55 @@ def load_previous() -> dict:
         return {}
 
 
+# --------------------------------------------------------------------------- #
+# 4. In Supabase schreiben (Spalten "AERA Preis € ohne Mwst.", "AERA Link", "AERA Stand")
+# --------------------------------------------------------------------------- #
+
+def sync_supabase(items: list[dict], now: str) -> None:
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+    if not url or not key:
+        log("Supabase: SUPABASE_URL / SUPABASE_SERVICE_KEY nicht gesetzt – übersprungen.")
+        return
+    h = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+
+    # Alle Artikelnummern laden und normalisiert zuordnen
+    db: dict[str, str] = {}
+    start = 0
+    while True:
+        r = requests.get(f"{url}/rest/v1/products?select=Artikelnummer",
+                         headers={**h, "Range": f"{start}-{start + 999}"}, timeout=30)
+        r.raise_for_status()
+        rows = r.json()
+        for row in rows:
+            db.setdefault(norm(row["Artikelnummer"]), row["Artikelnummer"])
+        if len(rows) < 1000:
+            break
+        start += 1000
+
+    updated = missing = 0
+    for it in items:
+        if it["status"] == "error":
+            continue  # technischer Fehler: alten Wert in der DB lassen
+        art = db.get(norm(it["sku"]))
+        if not art:
+            missing += 1
+            continue
+        ok = it["status"] == "ok"
+        body = {
+            "AERA Preis € ohne Mwst.": it["best_price"] if ok else None,
+            "AERA Link": it["aera_url"] if ok else None,
+            "AERA Stand": now,
+        }
+        r = requests.patch(f"{url}/rest/v1/products?Artikelnummer=eq.{quote(art, safe='')}",
+                           headers={**h, "Prefer": "return=minimal"}, data=json.dumps(body), timeout=30)
+        if r.status_code >= 300:
+            log(f"  Supabase-Fehler {art}: {r.status_code} {r.text[:200]}")
+        else:
+            updated += 1
+    log(f"Supabase: {updated} Produkte aktualisiert, {missing} Artikelnummern nicht in der Tabelle.")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=0, help="nur die ersten N Artikel (Test)")
@@ -417,6 +466,7 @@ def main() -> int:
             w.writerow(["date", "sku", "best_price", "min_price", "max_price", "offers"])
         w.writerows(history_rows)
 
+    sync_supabase(items, now)
     log(f"Fertig: {counts}")
     return 0
 
