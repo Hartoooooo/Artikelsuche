@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase/server'
 import { Product } from '@/types/product'
 import Link from 'next/link'
+import { getAeraItem, formatEuro, formatDateTime, STATUS_LABEL } from '@/lib/aera'
 
 async function getProduct(articleNumber: string): Promise<Product | null> {
   try {
@@ -36,6 +37,8 @@ export default async function ProductPage({
   if (!product) {
     notFound()
   }
+
+  const aeraItem = getAeraItem(product.Artikelnummer)
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -80,6 +83,39 @@ export default async function ProductPage({
               </div>
             )}
           </div>
+
+          {aeraItem && (
+            <div className="border-t border-gray-200 pt-6">
+              <h2 className="text-lg text-gray-800 mb-3">AERA-Online</h2>
+              {aeraItem.status === 'ok' ? (
+                <div className="space-y-1 text-gray-800">
+                  <p className="text-lg">
+                    ab {formatEuro(aeraItem.best_price)}
+                    {aeraItem.best_unit && <span className="text-sm text-gray-600"> / {aeraItem.best_unit}</span>}
+                  </p>
+                  {aeraItem.best_supplier && (
+                    <p className="text-sm text-gray-600">günstigster Händler: {aeraItem.best_supplier}</p>
+                  )}
+                  {aeraItem.min_price !== null && aeraItem.max_price !== null && (
+                    <p className="text-sm text-gray-600">
+                      {aeraItem.offers ?? '?'} Angebote zwischen {formatEuro(aeraItem.min_price)} und {formatEuro(aeraItem.max_price)}
+                    </p>
+                  )}
+                  {aeraItem.aera_url && (
+                    <a href={aeraItem.aera_url} target="_blank" rel="noopener noreferrer" className="text-sm underline text-gray-600">
+                      Auf AERA ansehen
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-600">{STATUS_LABEL[aeraItem.status] ?? aeraItem.status}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-3">
+                Preis-Stand: {formatDateTime(aeraItem.price_updated_at || aeraItem.checked_at)}
+                {aeraItem.stale && ' (alter Stand, letzter Abruf fehlgeschlagen)'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

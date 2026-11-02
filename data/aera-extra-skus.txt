@@ -1,0 +1,2 @@
+# Zusätzliche Artikelnummern für den AERA-Preischeck (eine pro Zeile).
+# Alle Produkte von micro-dental.de werden automatisch übernommen.

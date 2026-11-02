@@ -108,7 +108,12 @@ function DatabaseContent() {
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl text-gray-800 mb-6">Datenbankübersicht</h1>
+          <div className="flex items-baseline justify-between gap-4 mb-6">
+            <h1 className="text-2xl text-gray-800">Datenbankübersicht</h1>
+            <Link href="/aera" className="text-sm text-gray-600 hover:text-gray-800 underline whitespace-nowrap">
+              AERA-Preise
+            </Link>
+          </div>
 
           <form onSubmit={handleSearch} className="mb-6">
             <div className="flex gap-2 mb-4">

@@ -1,0 +1,67 @@
+name: AERA-Preise aktualisieren
+
+on:
+  schedule:
+    # täglich 05:17 UTC (≈ 06:17 / 07:17 Uhr in Berlin)
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+    inputs:
+      sku:
+        description: "Optional: nur diese Artikelnummer testen (es wird nichts gespeichert)"
+        required: false
+        default: ""
+  push:
+    branches: [aera-preise]
+    paths: ["scripts/aera_scraper.py", ".github/workflows/aera-prices.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aera-prices
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten
+        run: pip install requests beautifulsoup4
+
+      - name: Testlauf (einzelne Nummer)
+        if: github.event_name == 'workflow_dispatch' && inputs.sku != ''
+        run: python scripts/aera_scraper.py --debug --sku "${{ inputs.sku }}"
+
+      - name: Preise abfragen
+        if: github.event_name != 'workflow_dispatch' || inputs.sku == ''
+        run: python scripts/aera_scraper.py --debug
+
+      - name: Debug-HTML hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aera-debug
+          path: aera-debug/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Ergebnis committen
+        if: github.event_name != 'workflow_dispatch' || inputs.sku == ''
+        run: |
+          git config user.name "aera-preisbot"
+          git config user.email "aera-preisbot@users.noreply.github.com"
+          git add data/aera-prices.json data/aera-history.csv
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen."
+            exit 0
+          fi
+          git commit -m "AERA-Preise aktualisiert ($(date -u +%Y-%m-%d))"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
