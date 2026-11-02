@@ -107,18 +107,49 @@ def micro_dental_products(session: requests.Session) -> list[dict]:
             tag = soup.find("meta", attrs=attrs)
             if tag and tag.get("content"):
                 desc += " " + tag["content"]
-        m = re.search(r"\bSKU\s+([A-Za-z0-9][A-Za-z0-9/._\-]*)", desc)
-        if not m:
-            m = re.search(r"\bSKU\s+([A-Za-z0-9][A-Za-z0-9/._\-]*)", soup.get_text(" "))
-        if not m:
+        sku, source = find_sku(page.text, soup, desc)
+        if not sku:
             log(f"  ? keine SKU gefunden: {url}")
+            MISSING_PAGES.append(url)
             continue
-        sku = m.group(1).rstrip(".,")
         title_tag = soup.find("meta", attrs={"property": "og:title"})
         name = (title_tag.get("content") if title_tag else None) or (soup.title.string if soup.title else "")
         name = re.sub(r"\s*\|\s*micro dental\s*$", "", (name or "").strip(), flags=re.I)
-        products.append({"sku": sku, "name": name, "url": url})
+        products.append({"sku": sku, "name": name, "url": url, "sku_source": source})
     return products
+
+
+MISSING_PAGES: list[str] = []
+SKU_TOKEN = r"[A-Z0-9][A-Z0-9/._\-]{2,30}"
+
+
+def valid_sku(s: str) -> bool:
+    s = s.rstrip(".,")
+    return bool(re.fullmatch(SKU_TOKEN, s)) and any(c.isalpha() for c in s) or bool(re.fullmatch(r"\d[\d\-]{3,}", s))
+
+
+def find_sku(html: str, soup: BeautifulSoup, desc: str) -> tuple[str | None, str | None]:
+    """Artikelnummer einer micro-dental.de-Produktseite finden (mehrere Strategien)."""
+    # 1. SEO-Meta-Description: "... SKU PCPUNC15 reduziert kaufen."
+    m = re.search(r"\bSKU\s+(" + SKU_TOKEN + ")", desc)
+    if m and valid_sku(m.group(1)):
+        return m.group(1).rstrip(".,"), "meta"
+    # 2. Erste Zeile direkt unter der Überschrift
+    h1 = soup.find("h1")
+    if h1:
+        for el in h1.find_all_next(string=True, limit=15):
+            t = el.strip()
+            if t and t != h1.get_text(strip=True) and valid_sku(t):
+                return t, "h1"
+    # 3. Shopify-Daten im Next.js-Payload: "sku":"PCPUNC15" (auch escaped \"sku\":\"…\")
+    for m in re.finditer(r'\\?"sku\\?"\s*:\s*\\?"([^"\\]{2,40})\\?"', html):
+        if valid_sku(m.group(1).strip()):
+            return m.group(1).strip(), "payload"
+    # 4. Fließtext "SKU XYZ"
+    m = re.search(r"\bSKU\s+(" + SKU_TOKEN + ")", soup.get_text(" "))
+    if m and valid_sku(m.group(1)):
+        return m.group(1).rstrip(".,"), "text"
+    return None, None
 
 
 def extra_skus() -> list[dict]:
@@ -322,6 +353,7 @@ def main() -> int:
             "sku": sku,
             "name": p.get("name") or res.get("aera_name") or "",
             "micro_url": p.get("url"),
+            "sku_source": p.get("sku_source"),
             "status": status,
             "checked_at": now,
             "aera_name": res.get("aera_name"),
@@ -371,6 +403,7 @@ def main() -> int:
         "updated_at": now,
         "source": "aera-online.de (öffentliche Preise, ohne Login)",
         "counts": counts,
+        "micro_pages_without_sku": MISSING_PAGES,
         "items": sorted(items, key=lambda x: norm(x["sku"])),
     }
     with open(PRICES_FILE, "w", encoding="utf-8") as f:
